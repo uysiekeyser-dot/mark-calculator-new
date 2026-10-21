@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Mark calculators for AGR 343, GEN 244, HORT 352, NEM 344, SS 344, PP 344 and AGR 341 (Stellenbosch University, Semester 2, 2026).">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237A2944'/%3E%3Ctext x='32' y='43' font-family='Arial' font-size='30' font-weight='700' text-anchor='middle' fill='white'%3E%25%3C/text%3E%3C/svg%3E">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Semester 2 Mark Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: module tabs across the top; each module is a marks ledger (left) beside a result card (right), stacking on phones */
+:root{
+  --bg:#F7F6F5; --surface:#FFFFFF; --soft:#F2EDEF; --ink:#221B1E; --muted:#6C6267; --line:#E3DCDF;
+  --accent:#7A2944; --accent-ink:#FFFFFF; --gold:#94712F;
+  --good:#2C7A4C; --good-bg:#E3F1E8; --warn:#8F5E00; --warn-bg:#FAEFD8; --bad:#B0281F; --bad-bg:#FBE5E2; --info-bg:#EFEAF0;
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151113; --surface:#1E191B; --soft:#272024; --ink:#EFE9EB; --muted:#A99EA3; --line:#372E33;
+  --accent:#E0889F; --accent-ink:#1E1015; --gold:#D3B26E;
+  --good:#7DCB9A; --good-bg:#1B2E23; --warn:#E8B85C; --warn-bg:#33270F; --bad:#F09088; --bad-bg:#3A1A18; --info-bg:#2A2228;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#151113; --surface:#1E191B; --soft:#272024; --ink:#EFE9EB; --muted:#A99EA3; --line:#372E33;
+  --accent:#E0889F; --accent-ink:#1E1015; --gold:#D3B26E;
+  --good:#7DCB9A; --good-bg:#1B2E23; --warn:#E8B85C; --warn-bg:#33270F; --bad:#F09088; --bad-bg:#3A1A18; --info-bg:#2A2228;
+  color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.eyebrow{font:600 11px/1.3 var(--font-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0}
+header.top{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line)}
+h1{font:700 clamp(30px,5vw,44px)/1.02 var(--font-display);letter-spacing:-.025em;margin:6px 0 0;text-wrap:balance}
+.intro{margin:8px 0 0;color:var(--muted);max-width:60ch}
+.target{display:flex;flex-direction:column;gap:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface);gap:2px}
+.seg button{font:600 13px/1 var(--font-body);border:0;background:transparent;color:var(--ink);padding:8px 13px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:focus-visible,.tab:focus-visible,.ghost:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-block:18px 20px;scrollbar-width:thin}
+.tab{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:116px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer;text-align:left;font:inherit}
+.tab:hover{border-color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab .code{font:700 16px/1.15 var(--font-display);letter-spacing:-.01em}
+.tab .mini{font:500 12px/1.2 var(--font-mono);opacity:.85;font-variant-numeric:tabular-nums}
+.panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 20px;align-items:flex-end;margin:0 0 18px}
+.panel-head h2{font:700 clamp(24px,3.4vw,30px)/1.1 var(--font-display);letter-spacing:-.015em;margin:4px 0 2px;text-wrap:balance}
+.lede{margin:0;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.ghost{font:600 13px/1 var(--font-body);padding:9px 13px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.ghost:hover{border-color:var(--muted)}
+.ghost.armed{border-color:var(--bad);color:var(--bad)}
+.panel-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.panel-grid{grid-template-columns:1fr}}
+.ledger,.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.group{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.group-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;align-items:baseline;padding:11px 16px;background:var(--soft);border-bottom:1px solid var(--line)}
+.group-head h3{font:600 14px/1.3 var(--font-body);margin:0}
+.group-head span{font:500 12px/1.3 var(--font-mono);color:var(--muted)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 132px 124px;gap:8px 14px;align-items:center;padding:12px 16px}
+.row + .row{border-top:1px solid var(--line)}
+.row-label label{font-weight:600}
+.meta{display:block;font-size:12.5px;color:var(--muted);line-height:1.35}
+.field{position:relative}
+.field input{width:100%;font:500 16px/1.2 var(--font-mono);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.field input.has-suffix{padding-right:44px}
+.field input::placeholder{color:var(--muted);opacity:.7}
+.field input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.field input[aria-invalid="true"]{border-color:var(--bad)}
+.suffix{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:500 12px var(--font-mono);color:var(--muted);pointer-events:none}
+.out{text-align:right;font:12.5px/1.35 var(--font-mono);font-variant-numeric:tabular-nums}
+.out .pct{display:block;font-size:15px;font-weight:600}
+.out .pts{color:var(--muted)}
+.out .dim{color:var(--muted);font-weight:500}
+.out .flag{color:var(--bad)}
+.err{grid-column:1/-1;color:var(--bad);font-size:12.5px;margin:0}
+.miss{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer;width:max-content;max-width:100%}
+.miss input,.opt input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin:0}
+@media (max-width:540px){.row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.row-label{grid-column:1/-1}}
+.opts{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;font-size:14px}
+.opt label{cursor:pointer}
+.opt input[type=text]{width:72px;font:500 15px var(--font-mono);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.howto{font-size:13px;color:var(--muted);margin:0}
+.howto code{font-family:var(--font-mono);font-size:12.5px;background:var(--soft);padding:1px 5px;border-radius:4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{font:600 12px/1 var(--font-body);padding:6px 10px;border-radius:999px;white-space:nowrap}
+.t-good{background:var(--good-bg);color:var(--good)} .t-warn{background:var(--warn-bg);color:var(--warn)}
+.t-bad{background:var(--bad-bg);color:var(--bad)} .t-info,.t-neutral{background:var(--info-bg);color:var(--muted)}
+.big{display:flex;align-items:baseline;gap:4px;margin:10px 0 2px}
+.big .num{font:700 clamp(54px,9vw,68px)/.95 var(--font-display);letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.big .unit{font:600 22px var(--font-display);color:var(--muted)}
+.sub{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+.bar{position:relative;margin:20px 0 6px;padding-top:16px}
+.track{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--soft)}
+.track span{height:100%}
+.s-earned{background:var(--accent)} .s-lost{background:var(--line)}
+.s-open{background:repeating-linear-gradient(135deg,var(--line) 0 2px,transparent 2px 7px)}
+.marker{position:absolute;top:0;bottom:-4px;width:0;border-left:2px solid var(--ink)}
+.marker b{position:absolute;top:0;left:4px;font:600 10.5px/1 var(--font-mono);color:var(--ink);white-space:nowrap}
+.marker.flip b{left:auto;right:4px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font:12px/1.4 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.need{margin:16px 0 0;padding:12px 14px;border-radius:10px;background:var(--soft);font-size:14.5px}
+.need strong{font-family:var(--font-mono);font-size:16px}
+.extras{margin:14px 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.extras dt{color:var(--muted)} .extras dd{margin:0;text-align:right;font:600 14px var(--font-mono);font-variant-numeric:tabular-nums}
+.extras dd small{font:500 11.5px var(--font-body);display:block}
+.gates{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.gates li{font-size:13px;line-height:1.45;padding:9px 11px;border-radius:8px}
+.info{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+.info h4{font:600 13px/1.3 var(--font-body);margin:0 0 8px}
+.info ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink)}
+.info li + li{margin-top:4px}
+.info + .info{margin-top:0}
+.dates{list-style:none;padding:0!important;display:flex;flex-direction:column;gap:6px}
+.dates li{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;margin:0!important}
+.dates time{font:500 12.5px var(--font-mono);color:var(--muted);text-align:right;white-space:nowrap}
+.dates li.past{color:var(--muted)}
+.dates li.soon time{color:var(--accent);font-weight:600}
+.lastbox{margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.lastbox h3{font:700 clamp(20px,2.6vw,24px)/1.2 var(--font-display);letter-spacing:-.01em;margin:4px 0 0;text-wrap:balance}
+.lastbox .lead{margin:0;font-size:15px;max-width:70ch}
+.lastbox .missing{margin:0;padding:12px 14px;border-radius:10px;background:var(--soft);font-size:14px}
+.needs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:540px){.needs{grid-template-columns:1fr}}
+.nt{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;background:var(--bg)}
+.nt.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.nt .k{font:600 11px/1.3 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.nt .v{font:700 32px/1.05 var(--font-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.nt .r{font:500 12.5px/1.35 var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.nt.ok .v{color:var(--good)} .nt.no .v{color:var(--bad)}
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion: no-preference){.track span{transition:width .25s ease}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Stellenbosch University · Semester 2 · 2026</p>
+      <h1>Semester 2 Mark Calculator</h1>
+      <p class="intro">Each module uses the weightings from its 2026 framework. Type a percentage like <b>68</b> or a score like <b>34/50</b>. Leave anything you haven't written yet blank.</p>
+    </div>
+    <div class="target">
+      <span class="eyebrow">My target</span>
+      <div class="seg" role="group" aria-label="Target final mark">
+        <button type="button" data-target="50">Pass · 50</button>
+        <button type="button" data-target="60">60</button>
+        <button type="button" data-target="75">Distinction · 75</button>
+      </div>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="Modules" id="tabs"></nav>
+  <main id="panels"></main>
+  <footer>Built from the 2026 module frameworks for AGR 343, GEN 244, HORT 352, NEM 344, SS 344, PP 344 and AGR 341. Announcements on STEMLearn and your lecturers' rulings override anything here. Marks are saved in this browser only.</footer>
+</div>
+
+<script>
+const fmtN=(n,d=1)=>(Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toFixed(d);
+const fmtW=w=>{const r=Math.round(w*100)/100;return Number.isInteger(r)?String(r):String(r)};
+const suRound=x=>Math.floor(Math.round(x*1000)/1000+0.5);
+const avgOf=a=>a.reduce((s,x)=>s+x,0)/a.length;
+
+const MODS=[
+{id:'agr',code:'AGR 343',name:'Agronomy 343',full:'Intensive vegetable production systems',meta:'4 credits · Dr E Kempen',
+ defaults:{planOn:false,planW:'18'},
+ groups:[
+  {title:'Tests',note:'40% each as listed',fields:[
+    {id:'t1',label:'Test 1',meta:'9 Oct · classification, physiology, environment'},
+    {id:'t2',label:'Test 2',meta:'4 Nov · application across all outcomes'}]},
+  {title:'Coursework',note:'',fields:[
+    {id:'ca',label:'Class activities',meta:'Quizzes, cases, data interpretation · 2%'},
+    {id:'plan',label:'Production-system plan',meta:'Group plan · weight not given in the outline',show:s=>s.flags.planOn}]}
+ ],
+ toggles:[
+  {id:'planOn',type:'check',label:'Count the group production-system plan'},
+  {id:'planW',type:'num',label:'Plan weight (%)',show:s=>s.flags.planOn}],
+ example:{t1:'64',ca:'80'},
+ rules:['Test 1 40%, Test 2 40%, class activities 2%, as listed in the assessment table.','Pass mark is 50%. Every component must be completed to get a final mark.','The A3 additional assessment follows University and Faculty rules; date still to be confirmed.','If you miss an assessment, tell the lecturer as soon as possible and submit documentation.'],
+ dates:[['Test 1','2026-10-09'],['Test 2','2026-11-04']],
+ compute(s,p){
+  const list=[['t1','Test 1',40],['t2','Test 2',40],['ca','Class activities',2]];
+  let pw=parseFloat(String(s.flags.planW).replace(',','.')); if(!(pw>0&&pw<100)) pw=18;
+  if(s.flags.planOn) list.push(['plan','Production plan',pw]);
+  const tot=list.reduce((a,x)=>a+x[2],0);
+  const items=list.map(([id,label,w])=>({id,label,w:w/tot*100,pct:p[id]}));
+  const gates=[];
+  if(!s.flags.planOn) gates.push({tone:'info',text:'The outline’s weights add up to only 82% (40 + 40 + 2), and the group plan has no weight listed. Marks are scaled from those three to 100%. If your lecturer gives the plan a weight, switch it on below.'});
+  else gates.push({tone:'info',text:`Plan counted at ${fmtW(pw)}%. All weights are scaled so they add up to 100%.`});
+  return {items,gates};
+ }},
+
+{id:'gen',code:'GEN 244',name:'Genetics 244',full:'Introductory molecular genetics',meta:'16 credits · Dr B van Asch',
+ defaults:{},
+ groups:[
+  {title:'Class tests',note:'25% each',fields:[
+    {id:'a11',label:'A1.1',meta:'21 Aug · chapters 10, 11, 13, 14',miss:true},
+    {id:'a12',label:'A1.2',meta:'29 Sep · chapters 16, 17, 18',miss:true},
+    {id:'a2',label:'A2',meta:'27 Oct · chapters 20, 21, 22',miss:true},
+    {id:'a3',label:'A3 supplementary',meta:'20 Nov · all content · replaces the missed test',show:s=>['a11','a12','a2'].some(k=>s.flags['miss_'+k])}]},
+  {title:'Tutorial tests',note:'12.5% together',fields:[
+    {id:'tut1',label:'Tutorial test 1',meta:'Closed 28 Aug'},
+    {id:'tut2',label:'Tutorial test 2',meta:'Closed 2 Oct'},
+    {id:'tut3',label:'Tutorial test 3',meta:'Closes 23 Oct'}]},
+  {title:'Practicals',note:'12.5% together',fields:[
+    {id:'prac1',label:'Practical 1',meta:'Pre-lab + post-lab quiz'},
+    {id:'prac2',label:'Practical 2',meta:'Pre-lab + post-lab quiz'},
+    {id:'prac3',label:'Practical 3',meta:'Pre-lab + post-lab quiz'}]}
+ ],
+ toggles:[
+  {id:'missTut',type:'check',label:'I missed a tutorial session'},
+  {id:'missLab',type:'check',label:'I missed a lab session without a medical certificate'}],
+ example:{a11:'58',a12:'35/50',tut1:'70',tut2:'8/10',prac1:'75',prac2:'66'},
+ rules:['A1.1, A1.2 and A2 count 25% each. Tutorial tests and practical quizzes count 12.5% each as a block.','You may miss one class test; A3 (all content) then replaces it. Missing two means Incomplete.','At least 80% lecture attendance is required to sit A1.1, A1.2, A2 and A3.','The pre-lab quiz unlocks the lab and the post-lab quiz. Missing a lab without a medical certificate gives 0% for the whole practical component.','Missing a tutorial session gives 0% for the tutorial component.','Pass mark is 50%.'],
+ dates:[['A1.1','2026-08-21'],['A1.2','2026-09-29'],['Tutorial 3 test closes','2026-10-23'],['A2','2026-10-27'],['A3 supplementary','2026-11-20']],
+ compute(s,p){
+  const T=[['a11','A1.1'],['a12','A1.2'],['a2','A2']];
+  const missed=T.filter(([k])=>s.flags['miss_'+k]);
+  const items=[],gates=[],notes={};
+  T.forEach(([k,l])=>{
+    if(s.flags['miss_'+k]){
+      if(missed.length===1){items.push({id:'a3',label:`A3 (for ${l})`,w:25,pct:p.a3});notes[k]={text:'Replaced by A3'};}
+      else {items.push({id:k,label:l,w:25,pct:0,zeroed:true});notes[k]={text:'Missed',flag:true};}
+    } else items.push({id:k,label:l,w:25,pct:p[k]});
+  });
+  ['tut1','tut2','tut3'].forEach((k,i)=>items.push({id:k,label:`Tutorial test ${i+1}`,w:12.5/3,pct:s.flags.missTut?0:p[k],zeroed:!!s.flags.missTut}));
+  ['prac1','prac2','prac3'].forEach((k,i)=>items.push({id:k,label:`Practical ${i+1}`,w:12.5/3,pct:s.flags.missLab?0:p[k],zeroed:!!s.flags.missLab}));
+  if(missed.length===1) gates.push({tone:'warn',text:`You must write A3 on 20 Nov. It covers all content and replaces ${missed[0][1]}.`});
+  if(missed.length>1) gates.push({tone:'bad',block:'Incomplete',text:'Missing two or more class tests gives an Incomplete for the module.'});
+  if(s.flags.missLab) gates.push({tone:'bad',text:'Missing a lab without a medical certificate gives 0% for the whole practical component (12.5%).'});
+  if(s.flags.missTut) gates.push({tone:'bad',text:'Missing a tutorial session gives 0% for the whole tutorial component (12.5%).'});
+  const tut=['tut1','tut2','tut3'].map(k=>p[k]).filter(v=>v!=null), pr=['prac1','prac2','prac3'].map(k=>p[k]).filter(v=>v!=null);
+  const extras=[];
+  if(!s.flags.missTut&&tut.length) extras.push({label:'Tutorial average',value:fmtN(avgOf(tut))+'%',note:tut.length<3?`${tut.length} of 3 entered`:''});
+  if(!s.flags.missLab&&pr.length) extras.push({label:'Practical average',value:fmtN(avgOf(pr))+'%',note:pr.length<3?`${pr.length} of 3 entered`:''});
+  return {items,gates,notes,extras};
+ }},
+
+{id:'hort',code:'HORT 352',name:'Horticulture 352',full:'Ornamental and foliage production systems',meta:'8 credits · Dr L Hoffman',
+ defaults:{},
+ groups:[
+  {title:'Tests',note:'30% each',fields:[
+    {id:'t1',label:'Test 1',meta:'6 Aug · floriculture and biology of flowering'},
+    {id:'t2',label:'Test 2',meta:'17 Sep · cut flower production and postharvest'}]},
+  {title:'Written work',note:'40% together',fields:[
+    {id:'refl',label:'Reflection',meta:'24 Aug · 800 words · 10%'},
+    {id:'asg',label:'Investor proposal',meta:'4 Sep · 1200–1500 words · 30%'}]}
+ ],
+ toggles:[],
+ example:{t1:'62',refl:'7/10',asg:'68',t2:'59'},
+ rules:['Test 1 30%, reflection 10%, written assignment 30%, Test 2 30%.','Pass mark is 50%. Final marks are rounded to the nearest whole number, so 49.5 becomes 50 and 49.4 becomes 49.','Late assignments lose 10% per day.','Missing an assessment needs a valid medical certificate.'],
+ dates:[['Test 1','2026-08-06'],['Reflection due','2026-08-24'],['Written assignment due','2026-09-04'],['Test 2','2026-09-17']],
+ compute(s,p){
+  const items=[['t1','Test 1',30],['refl','Reflection',10],['asg','Written assignment',30],['t2','Test 2',30]].map(([id,label,w])=>({id,label,w,pct:p[id]}));
+  return {items,gates:[]};
+ }},
+
+{id:'nem',code:'NEM 344',name:'Nematology 344',full:'Introduction to nematology',meta:'16 credits · Dr N Stokwe',
+ defaults:{},
+ groups:[
+  {title:'Class tests',note:'Best 3 of 4 · 20% of class mark each',fields:[
+    {id:'n1',label:'Test 1',meta:'7 Aug · out of 50',outOf:50},
+    {id:'n2',label:'Test 2',meta:'28 Aug · out of 50',outOf:50},
+    {id:'n3',label:'Test 3',meta:'25 Sep · out of 50',outOf:50},
+    {id:'n4',label:'Test 4',meta:'16 Oct · out of 50',outOf:50}]},
+  {title:'Other class work',note:'20% of class mark each',fields:[
+    {id:'asg',label:'Assignment',meta:'Scientific article · early Sep'},
+    {id:'prac',label:'Practical test',meta:'15 Oct · specimen identification'}]},
+  {title:'Exam',note:'60% of final',fields:[
+    {id:'exam',label:'Exam',meta:'14 Nov · 3 hours · out of 100',outOf:100}]}
+ ],
+ toggles:[],
+ example:{n1:'31',n2:'27',n3:'35',n4:'24',asg:'65',prac:'72'},
+ rules:['Four class tests of 50 marks each. Only three count, at 20% of the class mark each. This calculator keeps your best three; a missed test is the one dropped.','No sick tests are written, but a medical certificate is still required if you miss one.','The assignment and the practical test each count 20% of the class mark.','A class mark of 40% is needed to write the exam.','Final mark = 40% class mark + 60% exam.'],
+ dates:[['Test 1','2026-08-07'],['Test 2','2026-08-28'],['Test 3','2026-09-25'],['Practical test','2026-10-15'],['Test 4','2026-10-16'],['Exam, first opportunity','2026-11-14'],['Exam, second opportunity','2026-12-04']],
+ compute(s,p){
+  const ids=['n1','n2','n3','n4'];
+  const filled=ids.filter(k=>p[k]!=null).sort((a,b)=>p[b]-p[a]);
+  const blanks=ids.filter(k=>p[k]==null);
+  const counted=filled.slice(0,3), dropped=filled.slice(3);
+  const items=[],notes={};
+  ids.forEach((k,i)=>{ if(counted.includes(k)) items.push({id:k,label:`Test ${i+1}`,w:8,pct:p[k],cls:true}); });
+  const slots=3-counted.length;
+  blanks.forEach((k,i)=>{ if(i<slots) items.push({id:k,label:`Test ${ids.indexOf(k)+1}`,w:8,pct:null,cls:true}); else notes[k]={text:'Not needed · best 3 count'}; });
+  dropped.forEach(k=>notes[k]={text:'Dropped · lowest',showPct:true});
+  items.push({id:'asg',label:'Assignment',w:8,pct:p.asg,cls:true});
+  items.push({id:'prac',label:'Practical test',w:8,pct:p.prac,cls:true});
+  items.push({id:'exam',label:'the exam',w:60,pct:p.exam});
+  return classGate(items,notes,[]);
+ }},
+
+{id:'ss',code:'SS 344',name:'Soil Science 344',full:'Soil and water management',meta:'16 credits · Dr L Munjonji',
+ defaults:{},
+ groups:[
+  {title:'Class tests',note:'40% of class mark each',fields:[
+    {id:'st1',label:'Class test 1',meta:'24 Aug · chapters 1–3'},
+    {id:'st2',label:'Class test 2',meta:'28 Sep · chapters 4–7'}]},
+  {title:'Tutorial tests',note:'20% of class mark together',fields:[1,2,3,4,5,6,7].map(n=>({id:'tut'+n,label:'Tutorial test '+n,meta:'10–15 marks'}))},
+  {title:'Exam',note:'Out of 200 · 60% of final',fields:[
+    {id:'ex_w',label:'Theory, MCQ and calculations',meta:'31 Oct · out of 100',outOf:100},
+    {id:'ex_e',label:'Essay questions',meta:'31 Oct · out of 50',outOf:50},
+    {id:'ex_f',label:'Farm plan',meta:'Due 30 Oct, 13:00 · out of 50',outOf:50}]}
+ ],
+ toggles:[],
+ example:{st1:'61',st2:'54',tut1:'12/15',tut2:'9/12',tut3:'80',tut4:'10/15',tut5:'11/12',ex_f:'38'},
+ rules:['Class mark = two class tests at 40% each + tutorial tests at 20% (the framework counts seven).','A class mark of 40% is needed to write the exam.','Exam out of 200: theory, MCQ and calculations 100, essays 50, farm plan 50.','Final mark = 40% class mark + 60% exam.','You may miss only one class test, and only with an authentic medical certificate (sick test 5–10 days later). Missing more gives an Incomplete.','The short in-class tests are not part of the class mark formula in the framework.'],
+ dates:[['Class test 1','2026-08-24'],['Class test 2','2026-09-28'],['Farm plan due, 13:00','2026-10-30'],['Exam, first opportunity','2026-10-31'],['Exam, second opportunity','2026-11-25']],
+ compute(s,p){
+  const items=[{id:'st1',label:'Class test 1',w:16,pct:p.st1,cls:true},{id:'st2',label:'Class test 2',w:16,pct:p.st2,cls:true}];
+  for(let n=1;n<=7;n++) items.push({id:'tut'+n,label:'Tutorial test '+n,w:8/7,pct:p['tut'+n],cls:true});
+  items.push({id:'ex_w',label:'the theory paper',w:30,pct:p.ex_w},{id:'ex_e',label:'the essays',w:15,pct:p.ex_e},{id:'ex_f',label:'the farm plan',w:15,pct:p.ex_f});
+  const extras=[];
+  const parts=[['ex_w',100],['ex_e',50],['ex_f',50]];
+  const got=parts.filter(([k])=>p[k]!=null);
+  if(got.length){const sc=got.reduce((a,[k,o])=>a+p[k]*o/100,0),of=got.reduce((a,[,o])=>a+o,0);
+    extras.push({label:'Exam paper',value:`${fmtN(sc)}/${of}`,note:of<200?`${fmtN(sc/of*100)}% on the parts entered`:`${fmtN(sc/2)}% overall`});}
+  return classGate(items,{},extras);
+ }},
+
+{id:'pp',code:'PP 344',name:'Plant Pathology 344',full:'Plant diseases and diagnosis',meta:'16 credits · Prof A McLeod',
+ defaults:{},
+ groups:[
+  {title:'Theory semester mark',note:'60% of class mark',fields:[
+    {id:'quiz',label:'Online quizzes',meta:'Weekly · 6% of theory semester mark'},
+    {id:'a11',label:'Theory test 1 (A1.1)',meta:'31 Aug · 47% · no sick test',miss:true},
+    {id:'a12',label:'Theory test 2 (A1.2)',meta:'2 Oct · 47%'}]},
+  {title:'Practical mark',note:'40% of class mark',fields:[
+    {id:'pt',label:'Practical tests and tutorials',meta:'16% · need 45% for practical exam entry'},
+    {id:'proj',label:'Practical project',meta:'Fourth quarter · 24%'},
+    {id:'pex',label:'Practical exam',meta:'7 or 8 Oct · 60%'}]},
+  {title:'Theory exam',note:'60% of final',fields:[
+    {id:'exam',label:'Theory exam (A2 or A3)',meta:'Exam period · needs theory semester mark of 40%'}]}
+ ],
+ toggles:[],
+ example:{quiz:'80',a11:'58',a12:'64',pt:'70',proj:'72'},
+ rules:['Theory semester mark = quizzes 6% + A1.1 47% + A1.2 47%.','Practical mark = practical tests and tutorials 16% + practical project 24% + practical exam 60%.','Class mark = 40% practical mark + 60% theory semester mark.','Final theory mark = 40% theory semester mark + 60% theory exam.','Final module mark = 40% class mark + 60% theory exam.','Theory exam entry needs a theory semester mark of 40%. Practical exam entry needs 45% for practical tests and tutorials.','To pass you need 50% for the final theory mark, the practical mark and the final module mark.','No sick test for A1.1: with a doctor’s certificate, A1.2 counts for both tests. A1.2 has a sick test.','Below 70% lecture attendance means an extra test; you need 50% in it to get exam access.','You choose A2 or A3. A3 may also be written if you did not pass on A2.'],
+ dates:[['Theory test 1 (A1.1)','2026-08-31'],['Theory test 2 (A1.2)','2026-10-02'],['Practical exam','2026-10-07']],
+ compute(s,p){
+  const miss=!!s.flags.miss_a11, notes={}, gates=[], extras=[];
+  const items=[{id:'quiz',label:'online quizzes',w:24*0.06,pct:p.quiz,g:'t'}];
+  if(miss) notes.a11={text:'Missed · A1.2 counts for both'}; else items.push({id:'a11',label:'A1.1',w:24*0.47,pct:p.a11,g:'t'});
+  items.push({id:'a12',label:'A1.2',w:24*(miss?0.94:0.47),pct:p.a12,g:'t'});
+  items.push({id:'pt',label:'practical tests and tutorials',w:16*0.16,pct:p.pt,g:'p'},{id:'proj',label:'the practical project',w:16*0.24,pct:p.proj,g:'p'},{id:'pex',label:'the practical exam',w:16*0.60,pct:p.pex,g:'p'});
+  items.push({id:'exam',label:'the theory exam',w:60,pct:p.exam});
+  const part=g=>{const all=items.filter(i=>i.g===g),d=all.filter(i=>i.pct!=null);if(!d.length)return null;const w=d.reduce((a,i)=>a+i.w,0);return {v:d.reduce((a,i)=>a+i.w*i.pct,0)/w,done:d.length===all.length};};
+  const T=part('t'),P=part('p');
+  if(T) extras.push({label:'Theory semester mark',value:fmtN(T.v)+'%',note:T.done?(T.v>=40?'Theory exam entry: yes':'Theory exam entry: no'):'So far'});
+  if(P) extras.push({label:'Practical mark',value:fmtN(P.v)+'%',note:P.done?(P.v>=50?'50% met':'Below 50%'):'So far'});
+  if(T&&P) extras.push({label:'Class mark',value:fmtN(0.4*P.v+0.6*T.v)+'%',note:T.done&&P.done?'':'So far'});
+  if(T&&T.done&&p.exam!=null){const ft=0.4*T.v+0.6*p.exam;extras.push({label:'Final theory mark',value:fmtN(ft)+'%',note:ft>=50?'50% met':'Below 50%'});
+    if(ft<50) gates.push({tone:'bad',block:'Theory mark below 50%',text:'Your final theory mark is below 50%, so the module is not passed. You may write A3.'});}
+  if(T&&T.done&&T.v<40) gates.push({tone:'bad',block:'No theory exam entry',text:'Your theory semester mark is below 40%, so you may not write the theory exam (A2 or A3).'});
+  else if(T&&T.done) gates.push({tone:'good',text:'Theory semester mark is 40% or higher, so you may write the theory exam.'});
+  else gates.push({tone:'info',text:'You need a theory semester mark of 40% to write the theory exam (A2 or A3).'});
+  if(p.pt!=null&&p.pt<45) gates.push({tone:'bad',block:'No practical exam entry',text:'Practical tests and tutorials are below 45%, so you may not write the practical exam.'});
+  if(P&&P.done&&P.v<50) gates.push({tone:'bad',block:'Practical mark below 50%',text:'Your practical mark is below 50%. You need 50% in it to pass the module.'});
+  let minOpen=null;
+  if(T&&T.done&&T.v>=40&&p.exam==null){const ex=(50-0.4*T.v)/0.6;
+    gates.push({tone:'info',text:`For a final theory mark of 50% you need at least ${fmtN(Math.max(0,Math.ceil(ex*10)/10))}% in the theory exam.`});
+    if(!items.some(i=>i.id!=='exam'&&i.pct==null)) minOpen=ex;}
+  if(miss) gates.push({tone:'warn',text:'There is no sick test for A1.1. With a valid doctor’s certificate, A1.2 counts for the full theory test weight.'});
+  return {items,notes,extras,gates,minOpen};
+ }},
+
+{id:'agr341',code:'AGR 341',name:'Agronomy 341',full:'Weed science and management',meta:'4 credits · Dr E Eksteen',
+ defaults:{},
+ groups:[
+  {title:'Class work',note:'40% together',fields:[
+    {id:'cp',label:'Class participation',meta:'Unannounced quizzes, class tests, articles · 20%'},
+    {id:'asg',label:'Assignment',meta:'Topic and date announced in class · 20%'}]},
+  {title:'Tests',note:'30% each · 40% subminimum',fields:[
+    {id:'t1',label:'Test 1',meta:'17 Aug · modules 1–4',miss:true},
+    {id:'t2',label:'Test 2',meta:'2 Sep · modules 5–8',miss:true}]},
+  {title:'A2 additional assessment',note:'All content · 50% minimum',fields:[
+    {id:'a2',label:'A2',meta:'13 Nov, 09:00 · replaces a missed or failed test',show:(s,p)=>s.flags.miss_t1||s.flags.miss_t2||(p.t1!=null&&p.t1<40)||(p.t2!=null&&p.t2<40)||(p.cp!=null&&p.asg!=null&&p.t1!=null&&p.t2!=null&&(0.2*p.cp+0.3*p.t1+0.3*p.t2+0.2*p.asg)<50)}]}
+ ],
+ toggles:[],
+ example:{cp:'75',asg:'68',t1:'62',t2:'55'},
+ rules:['Class participation 20%, Test 1 30%, Test 2 30%, assignment 20%.','Each test has a 40% subminimum.','A2 (13 Nov, all content) replaces a missed test or a test below 40%, at 30%. If both tests are missed or below 40%, A2 counts 60%.','You need at least 50% in A2. Below that, your A2 mark becomes your final mark.','Missed assessments need no documentation, but you must write A2. There is no A3.','Pass: a final mark of 50% plus the subminimums. Late assignments lose 10% per day.'],
+ dates:[['Test 1','2026-08-17'],['Test 2','2026-09-02'],['A2 additional assessment, 09:00','2026-11-13']],
+ compute(s,p){
+  const aff={t1:!!s.flags.miss_t1||(p.t1!=null&&p.t1<40),t2:!!s.flags.miss_t2||(p.t2!=null&&p.t2<40)};
+  const n=(aff.t1?1:0)+(aff.t2?1:0), notes={}, gates=[];
+  const allIn=['cp','asg','t1','t2'].every(k=>p[k]!=null), below=n===0&&allIn&&(0.2*p.cp+0.3*p.t1+0.3*p.t2+0.2*p.asg)<50;
+  let items=[], minOpen=null;
+  if((n>0||below)&&p.a2!=null&&p.a2<50){
+    items=[{id:'a2',label:'A2',w:100,pct:p.a2}];
+    ['cp','asg','t1','t2'].forEach(k=>notes[k]={text:'Not counted',showPct:true});
+    gates.push({tone:'bad',block:'A2 below 50%',text:'Your A2 mark is below the 50% minimum, so it becomes your final mark and the module is not passed.'});
+    return {items,notes,gates};
+  }
+  items.push({id:'cp',label:'class participation',w:20,pct:p.cp},{id:'asg',label:'the assignment',w:20,pct:p.asg});
+  ['t1','t2'].forEach((k,i)=>{
+    if(aff[k]) notes[k]={text:s.flags['miss_'+k]?'Missed · A2 replaces it':'Below 40% · A2 replaces it',showPct:true};
+    else items.push({id:k,label:`Test ${i+1}`,w:30,pct:p[k]});
+  });
+  if(n>0){
+    items.push({id:'a2',label:'A2',w:n*30,pct:p.a2});
+    gates.push({tone:'warn',text:`You must write A2 on 13 Nov at 09:00. It covers all content, counts ${n*30}% and replaces ${n===2?'both tests':'the affected test'}. You need at least 50% in A2; below that, your A2 mark becomes your final mark.`});
+    if(p.a2==null) minOpen=50;
+  } else {
+    gates.push({tone:'info',text:'Each test needs at least 40%. A missed test or one below 40% is replaced by A2 on 13 Nov.'});
+    if(below){
+      gates.push({tone:'warn',text:'Your final mark is below 50%, so you may write A2 on 13 Nov. The framework does not say how A2 counts in this case, so ask Dr Eksteen. A2 below 50% becomes your final mark.'});
+      if(p.a2!=null) notes.a2={text:'Ask how A2 counts here',showPct:true};
+    }
+  }
+  return {items,notes,gates,minOpen};
+ }}
+];
+
+function classGate(items,notes,extras){
+  const cls=items.filter(i=>i.cls), done=cls.filter(i=>i.pct!=null);
+  const gates=[];
+  if(done.length){
+    const w=done.reduce((a,i)=>a+i.w,0), cm=done.reduce((a,i)=>a+i.w*i.pct,0)/w;
+    const complete=done.length===cls.length;
+    extras.unshift({label:'Class mark',value:fmtN(cm)+'%',note:complete?(cm>=40?'Exam admission: yes':'Exam admission: no'):'So far, from the work entered'});
+    if(complete&&cm<40) gates.push({tone:'bad',block:'No exam admission',text:'Your class mark is below 40%, so you may not write the exam.'});
+    else if(complete) gates.push({tone:'good',text:'Class mark is 40% or higher, so you are admitted to the exam.'});
+    else gates.push({tone:'info',text:'You need a class mark of at least 40% to write the exam.'});
+  } else gates.push({tone:'info',text:'You need a class mark of at least 40% to write the exam.'});
+  return {items,notes,extras,gates};
+}
+
+function parseMark(raw,outOf){
+  const s=String(raw==null?'':raw).trim().replace(/,/g,'.');
+  if(!s) return {pct:null};
+  let m=s.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/), v;
+  if(m){const a=+m[1],b=+m[2]; if(!b) return {pct:null,err:'The “out of” number can’t be zero.'}; v=a/b*100;}
+  else if((m=s.match(/^(\d+(?:\.\d+)?)\s*%$/))) v=+m[1];
+  else if(/^\d+(?:\.\d+)?$/.test(s)) v=outOf?(+s)/outOf*100:+s;
+  else return {pct:null,err:outOf?`Type a mark out of ${outOf}, a score like 34/${outOf}, or a percentage like 68%.`:'Type a percentage like 68, or a score like 34/50.'};
+  if(v>100.0001) return {pct:null,err:outOf?`That is more than ${outOf}. Add % if you meant a percentage.`:'That works out to more than 100%.'};
+  return {pct:v};
+}
+
+const STORE='s2-mark-calc-2026';
+function blank(){const o={target:50,tab:'agr'};MODS.forEach(m=>o[m.id]={f:{},flags:Object.assign({},m.defaults)});return o;}
+let S=blank();
+try{const raw=localStorage.getItem(STORE); if(raw){const j=JSON.parse(raw); if(j&&typeof j==='object'){ if([50,60,75].includes(j.target)) S.target=j.target; if(j.tab) S.tab=j.tab; MODS.forEach(m=>{if(j[m.id]){S[m.id].f=Object.assign({},j[m.id].f||{});S[m.id].flags=Object.assign({},m.defaults,j[m.id].flags||{});}});}}}catch(e){}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
+
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function rowHTML(m,f){
+  const id=`${m.id}-${f.id}`;
+  return `<div class="row" id="row-${id}">
+    <div class="row-label"><label for="${id}">${f.label}</label><span class="meta">${f.meta||''}</span></div>
+    <div class="field"><input id="${id}" data-field="${f.id}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${f.outOf?'mark':'%'}" ${f.outOf?'class="has-suffix"':''} value="${esc(S[m.id].f[f.id]||'')}">${f.outOf?`<span class="suffix">/${f.outOf}</span>`:''}</div>
+    <div class="out" aria-live="polite"></div>
+    <p class="err" hidden></p>
+    ${f.miss?`<label class="miss"><input type="checkbox" id="${m.id}-miss_${f.id}" data-flag="miss_${f.id}" ${S[m.id].flags['miss_'+f.id]?'checked':''}> I missed this test</label>`:''}
+  </div>`;
+}
+function panelHTML(m){
+  const groups=m.groups.map(g=>`<div class="group"><div class="group-head"><h3>${g.title}</h3><span>${g.note}</span></div>${g.fields.map(f=>rowHTML(m,f)).join('')}</div>`).join('');
+  const toggles=m.toggles.length?`<div class="opts">${m.toggles.map(t=>t.type==='check'
+    ?`<div class="opt" id="opt-${m.id}-${t.id}"><input type="checkbox" id="${m.id}-${t.id}" data-flag="${t.id}" ${S[m.id].flags[t.id]?'checked':''}><label for="${m.id}-${t.id}">${t.label}</label></div>`
+    :`<div class="opt" id="opt-${m.id}-${t.id}"><label for="${m.id}-${t.id}">${t.label}</label><input type="text" inputmode="decimal" id="${m.id}-${t.id}" data-flag="${t.id}" value="${esc(S[m.id].flags[t.id]||'')}"></div>`).join('')}</div>`:'';
+  return `<section class="panel" id="panel-${m.id}" role="tabpanel" aria-labelledby="tab-${m.id}" hidden>
+    <div class="panel-head">
+      <div><p class="eyebrow">${m.meta}</p><h2>${m.name}</h2><p class="lede">${m.full}</p></div>
+      <div class="actions"><button type="button" class="ghost" data-act="example">Try example marks</button><button type="button" class="ghost" data-act="clear">Clear marks</button></div>
+    </div>
+    <div class="panel-grid">
+      <div class="ledger">${groups}${toggles}<p class="howto">Type <code>68</code> for a percentage or <code>34/50</code> for a score. Boxes marked with “/50” or “/100” take the raw mark; add <code>%</code> to enter a percentage there instead.</p></div>
+      <div class="side">
+        <div class="card" id="card-${m.id}"></div>
+        <div class="info"><h4>Rules from the framework</h4><ul>${m.rules.map(r=>`<li>${r}</li>`).join('')}</ul></div>
+        <div class="info"><h4>Key dates</h4><ul class="dates" id="dates-${m.id}"></ul></div>
+      </div>
+    </div>
+    <div class="lastbox" id="last-${m.id}" aria-live="polite"></div>
+  </section>`;
+}
+
+function summarize(items,target){
+  let doneW=0,earned=0,openW=0;const open=[];
+  items.forEach(it=>{if(it.pct==null){openW+=it.w;open.push(it)}else{doneW+=it.w;earned+=it.w*it.pct/100}});
+  const complete=!open.length;
+  return {doneW,earned,openW,open,complete,avg:doneW>0?earned/doneW*100:null,needed:open.length?(target-earned)/openW*100:null,final:complete?earned:null};
+}
+const listJoin=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+
+const results={};
+function update(m){
+  const s=S[m.id], p={}, errs={};
+  m.groups.forEach(g=>g.fields.forEach(f=>{const r=parseMark(s.f[f.id],f.outOf);p[f.id]=r.pct;if(r.err)errs[f.id]=r.err;}));
+  const res=m.compute(s,p); res.notes=res.notes||{}; res.extras=res.extras||[];
+  const byId={}; res.items.forEach(it=>byId[it.id]=it);
+  m.groups.forEach(g=>g.fields.forEach(f=>{
+    const row=document.getElementById(`row-${m.id}-${f.id}`);
+    row.hidden=f.show?!f.show(s,p):false;
+    const out=row.querySelector('.out'), it=byId[f.id], note=res.notes[f.id];
+    let h='';
+    if(note) h=`<span class="pct ${note.flag?'flag':'dim'}">${note.showPct&&p[f.id]!=null?fmtN(p[f.id])+'%':(note.flag?'0%':'—')}</span><span class="pts">${note.text}</span>`;
+    else if(it&&it.zeroed) h=`<span class="pct flag">0%</span><span class="pts">counts as 0</span>`;
+    else if(it&&it.pct!=null) h=`<span class="pct">${fmtN(it.pct)}%</span><span class="pts">+${fmtN(it.w*it.pct/100,2)} of ${fmtW(it.w)}</span>`;
+    else if(it) h=`<span class="pct dim">—</span><span class="pts">${fmtW(it.w)}% of final</span>`;
+    else h=`<span class="pct dim">—</span>`;
+    out.innerHTML=h;
+    const inp=row.querySelector('input[data-field]'), e=row.querySelector('.err');
+    if(errs[f.id]){e.textContent=errs[f.id];e.hidden=false;inp.setAttribute('aria-invalid','true');}else{e.hidden=true;inp.removeAttribute('aria-invalid');}
+  }));
+  m.toggles.forEach(t=>{const el=document.getElementById(`opt-${m.id}-${t.id}`); el.hidden=t.show?!t.show(s):false;});
+  const T=S.target, sm=summarize(res.items,T); if(res.minOpen!=null&&sm.needed!=null&&sm.needed<res.minOpen) sm.needed=res.minOpen; results[m.id]=sm;
+  const block=res.gates.find(g=>g.block);
+  let pill;
+  if(block) pill=['bad',block.block];
+  else if(sm.complete) pill=suRound(sm.final)>=50?['good',suRound(sm.final)>=T?'Pass':'Pass, below target']:['bad','Below 50%'];
+  else if(!sm.doneW) pill=['neutral','No marks yet'];
+  else if(sm.needed<=0) pill=['good','Target banked'];
+  else if(sm.needed>100) pill=['bad','Target out of reach'];
+  else if(sm.needed<=sm.avg) pill=['good','On track'];
+  else pill=['warn','Needs a lift'];
+  const big=sm.complete?fmtN(sm.final):(sm.doneW?fmtN(sm.earned):'—');
+  const sub=sm.complete?`Rounds to <b>${suRound(sm.final)}%</b> for the final result.`:(sm.doneW?`Points banked out of 100, updated with every mark. Average ${fmtN(sm.avg)}% on the ${fmtN(sm.doneW,0)}% marked · ${fmtN(sm.openW,0)}% still to come.`:'Enter your marks to see your final mark build up.');
+  let need;
+  if(sm.complete) need=sm.final>=T-1e-9?`You reached your ${T}% target.`:`${fmtN(T-sm.final)} points short of ${T}%.`;
+  else if(!sm.doneW) need=`To reach ${T}%, you need an average of <strong>${T}%</strong> across everything. Each assessment’s weight is shown next to it.`;
+  else if(sm.needed<=0) need=`You’ve already banked ${T} points. The remaining work still has to be completed.`;
+  else if(sm.needed>100) need=`Even 100% on the rest gives ${fmtN(sm.earned+sm.openW)}%, which is below ${T}%.`;
+  else{const n=Math.ceil(sm.needed*10)/10, labels=sm.open.map(o=>o.label);
+    need=sm.open.length===1?`To reach ${T}%, score <strong>${fmtN(n)}%</strong> in ${labels[0]}.`
+      :sm.open.length<=3?`To reach ${T}%, average <strong>${fmtN(n)}%</strong> across ${listJoin(labels)}.`
+      :`To reach ${T}%, average <strong>${fmtN(n)}%</strong> across the remaining ${sm.open.length} assessments (${fmtN(sm.openW)}% of the module).`;}
+  const lost=sm.doneW-sm.earned, tPos=Math.min(100,Math.max(0,T));
+  document.getElementById(`card-${m.id}`).innerHTML=`
+    <div class="card-top"><p class="eyebrow">${sm.complete?'Final mark':'Final mark so far'}</p><span class="pill t-${pill[0]}">${pill[1]}</span></div>
+    <div class="big"><span class="num">${big}</span>${big!=='—'?'<span class="unit">%</span>':''}</div>
+    <p class="sub">${sub}</p>
+    <div class="bar" role="img" aria-label="${fmtN(sm.earned)} points banked, ${fmtN(lost)} lost, ${fmtN(sm.openW)} still open, target ${T}">
+      <div class="track"><span class="s-earned" style="width:${sm.earned}%"></span><span class="s-lost" style="width:${lost}%"></span><span class="s-open" style="width:${sm.openW}%"></span></div>
+      <div class="marker ${tPos>80?'flip':''}" style="left:${tPos}%"><b>${T}</b></div>
+    </div>
+    <div class="legend"><span><i class="s-earned"></i>Banked ${fmtN(sm.earned)}</span><span><i class="s-lost"></i>Lost ${fmtN(lost)}</span><span><i class="s-open" style="outline:1px solid var(--line)"></i>Still open ${fmtN(sm.openW)}</span></div>
+    <p class="need">${need}</p>
+    ${res.extras.length?`<dl class="extras">${res.extras.map(x=>`<dt>${x.label}</dt><dd>${x.value}${x.note?`<small>${x.note}</small>`:''}</dd>`).join('')}</dl>`:''}
+    ${res.gates.length?`<ul class="gates">${res.gates.map(g=>`<li class="t-${g.tone}">${g.text}</li>`).join('')}</ul>`:''}`;
+  const tab=document.getElementById(`tab-${m.id}`).querySelector('.mini');
+  tab.textContent=sm.complete?`final ${fmtN(sm.final)}%`:(sm.doneW?`${fmtN(sm.earned)}% so far`:'no marks yet');
+  renderLast(m,res,sm);
+}
+
+const LAST={
+ agr:[{ids:['t2'],label:'Test 2',when:'4 Nov'}],
+ gen:[{ids:['a3'],label:'A3 supplementary',when:'20 Nov'},{ids:['a2'],label:'A2',when:'27 Oct'}],
+ hort:[{ids:['t2'],label:'Test 2',when:'17 Sep'}],
+ nem:[{ids:['exam'],label:'the exam',when:'14 Nov'}],
+ ss:[{ids:['ex_w','ex_e'],label:'the exam paper (theory and essays)',when:'31 Oct'}],
+ pp:[{ids:['exam'],label:'the theory exam (A2)',when:'Exam period'}],
+ agr341:[{ids:['a2'],label:'A2',when:'13 Nov'},{ids:['t2'],label:'Test 2',when:'2 Sep'}]
+};
+const STOP=['Incomplete','No exam admission','No theory exam entry','A2 below 50%'];
+function renderLast(m,res,sm){
+  const box=document.getElementById(`last-${m.id}`);
+  const have=new Set(res.items.map(i=>i.id));
+  const L=LAST[m.id].find(o=>o.ids.every(k=>have.has(k)))||LAST[m.id][LAST[m.id].length-1];
+  const F={}; m.groups.forEach(g=>g.fields.forEach(f=>F[f.id]=f));
+  const missing=res.items.filter(i=>!L.ids.includes(i.id)&&i.pct==null).map(i=>(F[i.id]||i).label);
+  const block=res.gates.find(g=>g.block);
+  if(sm.complete){
+    box.innerHTML=`<div><p class="eyebrow">All marks entered</p><h3>Final mark: ${fmtN(sm.final)}%, which rounds to ${suRound(sm.final)}%</h3></div>${block?`<p class="missing t-bad">${block.text}</p>`:''}`;
+    return;
+  }
+  let html=`<div><p class="eyebrow">Last assessment · ${L.when}</p><h3>Mark you need in ${L.label}</h3></div>`;
+  if(block&&STOP.includes(block.block)){ box.innerHTML=html+`<p class="missing t-bad">${block.text}</p>`; return; }
+  if(missing.length){
+    box.innerHTML=html+`<p class="missing">Enter your mark${missing.length>1?'s':''} for ${listJoin(missing)}. Once every other mark is in, this shows exactly what you need in ${L.label}.</p>`;
+    return;
+  }
+  const openLast=res.items.filter(i=>L.ids.includes(i.id)&&i.pct==null);
+  const outOf=openLast.every(i=>F[i.id]&&F[i.id].outOf)?openLast.reduce((a,i)=>a+F[i.id].outOf,0):0;
+  const floor=res.minOpen||0, names={50:'Pass · 50%',60:'60%',75:'Distinction · 75%'};
+  let leadV='';
+  const tiles=[50,60,75].map(t=>{
+    const raw=(t-sm.earned)/sm.openW*100, req=Math.max(raw,floor);
+    let cls='',v,r;
+    if(req>100){cls='no';v='Out of reach';r=`100% gives ${fmtN(sm.earned+sm.openW)}%`;}
+    else if(req<=0){cls='ok';v='0%';r='Already secured';}
+    else{const c=Math.ceil(req*10)/10; v=fmtN(c)+'%'; r=outOf?`${fmtN(Math.ceil(c*outOf/10)/10)} out of ${outOf}`:`${fmtN(Math.max(0,t-sm.earned))} more points`; if(floor>0&&raw<floor) r+=' · minimum applies';}
+    if(t===S.target) leadV=v;
+    return `<div class="nt ${cls} ${t===S.target?'on':''}"><span class="k">${names[t]}</span><span class="v">${v}</span><span class="r">${r}</span></div>`;
+  }).join('');
+  const floorNote=floor>0?(m.id==='pp'?` This includes the ${fmtN(Math.ceil(floor*10)/10)}% you need for a final theory mark of 50%.`:` A2 has a 50% minimum, so you need at least 50% even if a lower mark would reach your target.`):'';
+  const lead=leadV==='Out of reach'?`Your ${S.target}% target can’t be reached any more.`:leadV==='0%'?`You’ve already secured ${S.target}%, but you still have to write ${L.label}.`:`To finish on ${S.target}%, you need <b>${leadV}</b> in ${L.label}.`;
+  box.innerHTML=html+`<p class="lead">${lead}${floorNote}</p><div class="needs">${tiles}</div>`;
+}
+
+function renderDates(m){
+  const today=new Date(); today.setHours(0,0,0,0);
+  document.getElementById(`dates-${m.id}`).innerHTML=m.dates.map(([l,d])=>{
+    const [y,mo,da]=d.split('-').map(Number), dt=new Date(y,mo-1,da), diff=Math.round((dt-today)/864e5);
+    const nice=dt.toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+    const rel=diff<0?'done':diff===0?'today':diff===1?'tomorrow':`in ${diff} days`;
+    return `<li class="${diff<0?'past':diff<=14?'soon':''}"><span>${l}</span><time datetime="${d}">${nice} · ${rel}</time></li>`;
+  }).join('');
+}
+
+function selectTab(id){
+  if(!MODS.some(m=>m.id===id)) id='agr';
+  S.tab=id; save();
+  MODS.forEach(m=>{const on=m.id===id;document.getElementById(`tab-${m.id}`).setAttribute('aria-selected',on);document.getElementById(`tab-${m.id}`).tabIndex=on?0:-1;document.getElementById(`panel-${m.id}`).hidden=!on;});
+}
+
+document.getElementById('tabs').innerHTML=MODS.map(m=>`<button type="button" class="tab" role="tab" id="tab-${m.id}" aria-controls="panel-${m.id}" data-tab="${m.id}"><span class="code">${m.code}</span><span class="mini">—</span></button>`).join('');
+document.getElementById('panels').innerHTML=MODS.map(panelHTML).join('');
+MODS.forEach(m=>{renderDates(m);update(m);});
+
+function syncTarget(){document.querySelectorAll('[data-target]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.target===S.target));}
+syncTarget();
+document.querySelector('.seg').addEventListener('click',e=>{const b=e.target.closest('[data-target]');if(!b)return;S.target=+b.dataset.target;save();syncTarget();MODS.forEach(update);});
+document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)selectTab(b.dataset.tab);});
+document.getElementById('tabs').addEventListener('keydown',e=>{
+  if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+  const i=MODS.findIndex(m=>m.id===S.tab), n=MODS[(i+(e.key==='ArrowRight'?1:-1)+MODS.length)%MODS.length].id;
+  selectTab(n);document.getElementById('tab-'+n).focus();e.preventDefault();});
+
+MODS.forEach(m=>{
+  const panel=document.getElementById(`panel-${m.id}`);
+  const onEdit=e=>{
+    const t=e.target;
+    if(t.dataset.field!=null){S[m.id].f[t.dataset.field]=t.value;}
+    else if(t.dataset.flag!=null){S[m.id].flags[t.dataset.flag]=t.type==='checkbox'?t.checked:t.value;}
+    else return;
+    save();update(m);
+  };
+  panel.addEventListener('input',onEdit);
+  panel.addEventListener('change',onEdit);
+  let armTimer=null;
+  panel.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act]');if(!b)return;
+    if(b.dataset.act==='example'){S[m.id].f=Object.assign({},m.example);}
+    else if(b.dataset.act==='clear'){
+      if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Tap again to clear';clearTimeout(armTimer);armTimer=setTimeout(()=>{b.classList.remove('armed');b.textContent='Clear marks';},3000);return;}
+      clearTimeout(armTimer);b.classList.remove('armed');b.textContent='Clear marks';
+      S[m.id].f={};S[m.id].flags=Object.assign({},m.defaults);
+    }
+    m.groups.forEach(g=>g.fields.forEach(f=>{document.getElementById(`${m.id}-${f.id}`).value=S[m.id].f[f.id]||'';}));
+    panel.querySelectorAll('[data-flag]').forEach(el=>{const v=S[m.id].flags[el.dataset.flag];if(el.type==='checkbox')el.checked=!!v;else el.value=v||'';});
+    save();update(m);
+  });
+});
+
+const h=(location.hash||'').slice(1);
+selectTab(MODS.some(m=>m.id===h)?h:S.tab);
+</script>
+</body>
+</html>
